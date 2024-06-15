@@ -40,10 +40,39 @@ function cleanHeadingTextForToc(htext: string): string {
   return htext.trim()
 }
 
+function cleanWikiLink(htext: string): string {
+  let i = htext.split(' ')
+  if (i.length > 1) {
+    let newStringArray = []
+
+    // Store the generated header number.
+    newStringArray.push(i.shift())
+
+    let newText = i.join(" ")
+    if (newText.startsWith('[[') && htext.endsWith(']]')) {
+        newText = newText.replace('[[', '')
+        newText = newText.replace(']]', '')
+
+        // If the link has display text use that.
+        if (newText.contains('|')) {
+            let j = newText.split('|')
+            newText = j[1]
+        }
+
+        let k = newText.split(' ')
+        newStringArray = newStringArray.concat(k)
+
+        // Rebuild htext
+        htext = newStringArray.join(" ")
+     } 
+  }
+  return htext
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function createTocEntry(h: HeadingCache, settings: NumberHeadingsPluginSettings, initialHeadingLevel: number): string {
-  const text = h.heading
-  const cleanText = cleanHeadingTextForToc(text)
+  const text = cleanWikiLink(h.heading)
+  const cleanText = cleanWikiLink(cleanHeadingTextForToc(text))
 
   let bulletIndent = ''
   const startLevel = initialHeadingLevel
