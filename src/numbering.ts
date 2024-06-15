@@ -6,6 +6,12 @@ import { SupportFlags, createSupportFlagsFromSettings, findRangeInHeaderString }
 
 const TOC_LIST_ITEM_BULLET = '-'
 
+
+interface HeadingText {
+    text: string,
+    cleanText: string
+}
+
 function makeHeadingHashString(editor: Editor, heading: HeadingCache): string | undefined {
   const regex = /^\s{0,4}#+/g
   const headingLineString = editor.getLine(heading.position.start.line)
@@ -40,10 +46,65 @@ function cleanHeadingTextForToc(htext: string): string {
   return htext.trim()
 }
 
+function cleanWikiLink(newText: string, use_display_text: boolean): string {
+  if (newText.startsWith('[[') && newText.endsWith(']]')) {
+    newText = newText.replace('[[', '')
+    newText = newText.replace(']]', '')
+
+    // If the link has display text use that.
+    console.log('hello');
+
+  } 
+
+  return newText
+}
+
+function parseHeaderText(htext: string): HeadingText {
+  let stringArray = []
+  let linkText = ""
+  let displayText = ""
+
+  // store the generated heading number
+  let i = htext.split(' ');
+
+  if (i.length > 1) {
+    stringArray.push(i.shift())
+  }
+
+  htext = i.join(' ')
+
+  linkText = cleanWikiLink(htext, false)
+  if (linkText.contains('|')) {
+    const j = linkText.split('|')
+    linkText = linkText.replace('|', ' ')
+    displayText = j[1]
+  }
+  else {
+    displayText = linkText
+  }
+
+  if (linkText.contains('#')) {
+    linkText = linkText.replace('#', ' ')
+  }
+
+  if (displayText.contains('#')) {
+    displayText = displayText.replace('#', ' > ')
+  }
+
+  let k = linkText.split(' ')
+  stringArray = stringArray.concat(k)
+  linkText = stringArray.join(' ')
+
+  return {
+      text: cleanHeadingTextForToc(linkText),
+      cleanText: cleanHeadingTextForToc(displayText)
+  }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function createTocEntry(h: HeadingCache, settings: NumberHeadingsPluginSettings, initialHeadingLevel: number): string {
-  const text = h.heading
-  const cleanText = cleanHeadingTextForToc(text)
+  // Check that h.heading is a link in [[]] format.
+  const headerText = parseHeaderText(h.heading);
 
   let bulletIndent = ''
   const startLevel = initialHeadingLevel
@@ -51,7 +112,7 @@ function createTocEntry(h: HeadingCache, settings: NumberHeadingsPluginSettings,
     bulletIndent += '\t'
   }
 
-  const entryLink = `[[#${text}|${cleanText}]]`
+  const entryLink = `[[#${headerText.text}|${headerText.cleanText}]]`
 
   return bulletIndent + TOC_LIST_ITEM_BULLET + ' ' + entryLink
 }

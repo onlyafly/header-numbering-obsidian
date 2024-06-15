@@ -40,6 +40,11 @@ describe('heading prefix range finding', () => {
     expect(findRangeInHeaderString('# 4) Foo bar', 42, defaultSupportFlags)?.to.ch).toBe(5)
     expect(findRangeInHeaderString('# 4 ) Foo bar', 42, defaultSupportFlags)?.to.ch).toBe(6)
   })
+  test('link forms', () => {
+    expect(findRangeInHeaderString('# 4 [[Foo bar]]', 42, defaultSupportFlags)?.to.ch).toBe(4)
+    expect(findRangeInHeaderString('# 4 [[Foo bar:Foo Bar Display]]', 42, defaultSupportFlags)?.to.ch).toBe(4)
+    expect(findRangeInHeaderString('# 4 [[Foo bar#Foo Bar:Foo Bar Display]]', 42, defaultSupportFlags)?.to.ch).toBe(4)
+  })
 })
 
 // Generate an clean settings object for testing
